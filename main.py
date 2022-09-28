@@ -129,20 +129,24 @@ class ExcelMapper:
         sheet_name = file.sheet_names[0]
         return abspath, sheet_name
     
-    def __find_account(self, taccount: pd.Series) -> tuple[any, any]:
+    def __find_account(self, taccount: str, target: int = 0) -> str:
         """ 
         Find bridgenote account given target account
         
         :param taccount: pd.Series target account
         :return tuple[account: any, sub_account: any]
         """
-        df = self.__mapper.loc[self.__mapper[0].isin(taccount)]
-    
+        df = self.__mapper.loc[self.__mapper[0] == taccount]
+
+        if target == 1:
+            column = 5
+        else:
+            column = 3
+
         if not df.empty:
-            account, sub_account = df[[3, 5]].values[0]
-            return account, sub_account
+            return df[column].values[0]
         
-        return f'N/A: {taccount.str}', None
+        return 'NA' if column == 5 else f'N/A: {taccount}'
 
     def __generate_detail_columns(self, side: str):
         columns: list = ['division', 'project', 'account', 'sub_account', 'amount', 'remarks']
@@ -155,13 +159,12 @@ class ExcelMapper:
         credit: pd.DataFrame = credit.rename(columns={'amount': 'c_amount', 'remarks': 'c_remarks'})
         
         credit['c_amount'] = (-credit['c_amount'])
-        c_acount: pd.Series = credit.pop('account')
-        c_bn_account, c_bn_sub_account = self.__find_account(c_acount)
+        account: pd.Series = credit.pop('account')
+        credit['c_account']: pd.Series = account.apply(lambda x: self.__find_account(x, target=0)).reset_index(drop=True)
+        credit['c_sub_account']: pd.Series = account.apply(lambda x: self.__find_account(x, target=1)).reset_index(drop=True)
         
         credit.insert(len(credit.columns.values), 'c_division', '')
         credit.insert(len(credit.columns.values), 'c_project', '')
-        credit.insert(len(credit.columns.values), 'c_account', c_bn_account)
-        credit.insert(len(credit.columns.values), 'c_sub_account', c_bn_sub_account if c_bn_sub_account is not None else 'N/A')
 
         return credit.reindex(columns=self.__generate_detail_columns('c'))
     
@@ -170,13 +173,12 @@ class ExcelMapper:
         debit: pd.DataFrame = debit.reset_index(drop=True)
         debit: pd.DataFrame = debit.rename(columns={'amount': 'd_amount', 'remarks': 'd_remarks'})
 
-        d_acount: pd.Series = debit.pop('account')
-        d_bn_account, d_bn_sub_account = self.__find_account(d_acount)
+        acount: pd.Series = debit.pop('account')
+        debit['d_account'] = acount.apply(lambda x: self.__find_account(x, target=0)).reset_index(drop=True)
+        debit['d_sub_account'] = acount.apply(lambda x: self.__find_account(x, target=1)).reset_index(drop=True)
         
         debit.insert(len(debit.columns.values), 'd_division', '')
         debit.insert(len(debit.columns.values), 'd_project', '')
-        debit.insert(len(debit.columns.values), 'd_account', d_bn_account)
-        debit.insert(len(debit.columns.values), 'd_sub_account', d_bn_sub_account if d_bn_sub_account is not None else 'N/A')
 
         return debit.reindex(columns=self.__generate_detail_columns('d'))
 
@@ -192,7 +194,6 @@ class ExcelMapper:
 
         debit: pd.DataFrame = self.__create_debit(record[record['amount'] > 0][columns])
         credit: pd.DataFrame = self.__create_credit(record[record['amount'] < 0][columns])
-
         content: pd.DataFrame = pd.concat([debit, credit], axis=1).fillna('')
         journal: pd.DataFrame = pd.concat([foreign, content], axis=1).fillna(method='ffill')
         journal: pd.DataFrame = journal.reindex(columns=columns_reindex)
