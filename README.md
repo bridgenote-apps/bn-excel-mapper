@@ -25,7 +25,7 @@ https://user-images.githubusercontent.com/79818218/191722683-8bbaa145-d1b5-44f7-
 
 ### Download and Running
 
-1. Download zip file from [bridgenote-apps/bn-excel-mapper](https://github.com/bridgenote-apps/bn-excel-mapper/archive/refs/tags/v1.0.0.zip).
+1. Download zip file from [bridgenote-apps/bn-excel-mapper](https://github.com/bridgenote-apps/bn-excel-mapper/archive/refs/tags/v1.1.0.zip).
 2. Extract the zip file at local machine.
 3. And doubble click on file [main.py](https://github.com/bridgenote-apps/bn-excel-mapper/blob/main/main.py) for running the program.
 4. Then follow the instruction on the program.
