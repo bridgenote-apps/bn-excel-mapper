@@ -21,7 +21,7 @@ class ExcelMapper:
         '1' : 'journal_number',
         '2' : 'date',
         '4' : 'account',
-        '8' : 'amount',
+        '9' : 'amount',
         '13' : 'remarks',
     }
 
